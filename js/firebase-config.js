@@ -17,21 +17,18 @@ import {
     onValue
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// =========================================================================
-// REEMPLAZA ESTE OBJETO CON LAS CREDENCIALES DE TU PROYECTO EN FIREBASE
-// =========================================================================
 const firebaseConfig = {
     apiKey: "AIzaSyAF-RevThB8a_bNjLYhAR1gaQLQe39d8c4",
-  authDomain: "tiempo-fuera-control.firebaseapp.com",
-  databaseURL: "https://tiempo-fuera-control-default-rtdb.firebaseio.com",
-  projectId: "tiempo-fuera-control",
-  storageBucket: "tiempo-fuera-control.firebasestorage.app",
-  messagingSenderId: "454927378744",
-  appId: "1:454927378744:web:4bf8f0dc2565a8969779cd",
-  measurementId: "G-9C7R2YMSJY"
+    authDomain: "tiempo-fuera-control.firebaseapp.com",
+    databaseURL: "https://tiempo-fuera-control-default-rtdb.firebaseio.com",
+    projectId: "tiempo-fuera-control",
+    storageBucket: "tiempo-fuera-control.firebasestorage.app",
+    messagingSenderId: "454927378744",
+    appId: "1:454927378744:web:4bf8f0dc2565a8969779cd",
+    measurementId: "G-9C7R2YMSJY"
 };
 
-// Lista blanca de administradores autorizados
+// Lista blanca estricta de administradores autorizados
 export const ALLOWED_ADMINS = [
     "hernan.araus@gmail.com",
     "contacto@tiempofuera.cl"
