@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competencia de Triples — Tiempo Fuera Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        .layout-triples { display: grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+        @media (max-width: 1024px) { .layout-triples { grid-template-columns: 1fr; } }
+        .live-hud {
+            display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 12px;
+            background: #0e1117; border: 1px solid var(--border); border-radius: 10px;
+            padding: 14px; margin-bottom: 14px; align-items: center;
+        }
+        .hud-box { text-align: center; background: var(--bg-card); border-radius: 8px; padding: 8px; border: 1px solid var(--border); }
+        .hud-box small { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+        .hud-num { font-family: 'Barlow Condensed', sans-serif; font-size: 46px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+        .btn-row-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .btn-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .btn-big-make { background: #16a34a; color: #fff; padding: 16px; font-size: 15px; border: 2px solid #4ade80; }
+        .btn-big-miss { background: #dc2626; color: #fff; padding: 16px; font-size: 15px; border: 2px solid #f87171; }
+        .btn-money { background: linear-gradient(135deg, #f59e0b, #d97706); color: #111; padding: 12px; }
+        .btn-half { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; padding: 12px; }
+        .shot-strip {
+            display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px;
+            background: #0e1117; padding: 8px; border-radius: 6px; border: 1px solid var(--border); align-items: center;
+        }
+        .badge-b { width: 25px; height: 25px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+        .b-1 { background: #ea580c; color: #fff; }
+        .b-0 { background: #262932; color: #777; }
+        .b-m { background: #facc15; color: #111; }
+        .b-h { background: #2563eb; color: #fff; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; color: var(--tf-gold); border-bottom: 1px solid var(--border); padding: 6px 4px; text-transform: uppercase; font-size: 11px; }
+        td { padding: 6px 4px; border-bottom: 1px solid #222631; vertical-align: middle; }
+        tr.act-row { background: rgba(225, 29, 42, 0.14); }
+        input[type="number"] { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 7px 9px; border-radius: 6px; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <button class="btn-dark" onclick="window.location.href='index.html'">← Lanzador</button>
+            <div class="topbar-title">COMPETENCIA DE <span>TRIPLES</span></div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="compBadge" style="font-size:12px; color:var(--tf-gold); font-weight:800;">CARGANDO...</span>
+            <button id="btnOverlaySwitch" class="btn-green" onclick="toggleTriplesOverlay()">● EN AIRE</button>
+            <button class="btn-dark" onclick="window.open('output.html?comp=' + compId, '_blank')">👁 Salida OBS</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="layout-triples">
+            <!-- COLUMNA IZQUIERDA: OPERACIÓN EN CANCHA -->
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Mesa de Control en Vivo</h2>
+                        <select id="cfgStage" onchange="syncTriples()" style="width:auto; padding:5px 10px;">
+                            <option value="GRUPO A">GRUPO A</option>
+                            <option value="GRUPO B">GRUPO B</option>
+                            <option value="GRUPO C">GRUPO C</option>
+                            <option value="SEMIFINAL 1">SEMIFINAL 1</option>
+                            <option value="SEMIFINAL 2">SEMIFINAL 2</option>
+                            <option value="GRAN FINAL">GRAN FINAL</option>
+                            <option value="DESEMPATE">DESEMPATE</option>
+                        </select>
+                    </div>
+
+                    <div class="live-hud">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <img id="hudTeamLogo" src="" style="width:54px; height:54px; object-fit:contain; display:none;">
+                            <div>
+                                <div id="hudName" style="font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:800; line-height:1;">SIN PARTICIPANTES</div>
+                                <div id="hudMeta" style="font-size:12px; color:var(--tf-gold); font-weight:700; margin-top:3px;">AGREGA JUGADORES A LA DERECHA</div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">A Superar: <strong id="hudTarget" style="color:#fff;">0 PTS</strong></div>
+                            </div>
+                        </div>
+                        <div class="hud-box">
+                            <small>Puntaje Turno</small>
+                            <div class="hud-num" id="hudScore" style="color:var(--tf-gold);">0</div>
+                        </div>
+                        <div class="hud-box">
+                            <small>Cronómetro</small>
+                            <div class="hud-num" id="hudClock">1:00.0</div>
+                        </div>
+                    </div>
+
+                    <div class="btn-row-4">
+                        <button id="btnTimer" class="btn-green" onclick="toggleTimer()">▶ INICIAR [Espacio]</button>
+                        <button class="btn-dark" onclick="setMode('oficial')">1:00 Oficial</button>
+                        <button class="btn-dark" onclick="setMode('desempate30')">0:30 Desemp.</button>
+                        <button class="btn-dark" onclick="setMode('muerte_subita')">M. Súbita</button>
+                    </div>
+
+                    <div class="btn-row-2">
+                        <button class="btn-big-make" onclick="addShot('triple')">🏀 TRIPLE ADENTRO (+1) [1 / →]</button>
+                        <button class="btn-big-miss" onclick="addShot('fallo')">✕ TIRO FALLADO (0) [0 / ←]</button>
+                    </div>
+
+                    <div class="btn-row-2">
+                        <button id="btnMoney" class="btn-money" onclick="addShot('money')">🔥 BALÓN ESPECIAL (+3) [E]</button>
+                        <button id="btnHalf" class="btn-half" onclick="addShot('half')">🎯 MEDIA CANCHA (+3) [M]</button>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-bottom:10px;">
+                        <button id="btnMissMoney" class="btn-dark" style="flex:1;" onclick="missSpecial('money')">✕ Falló Esp.</button>
+                        <button id="btnMissHalf" class="btn-dark" style="flex:1;" onclick="missSpecial('half')">✕ Falló M.C.</button>
+                        <button class="btn-dark" style="flex:1;" onclick="undoShot()">↩ Deshacer</button>
+                        <button class="btn-gold" style="flex:1.2;" onclick="savePlayerScore()">💾 Guardar Puntaje</button>
+                    </div>
+
+                    <div class="shot-strip" id="shotStrip"></div>
+                </div>
+
+                <!-- POSICIÓN, ESCALA Y TRANSPARENCIA EN LIENZO -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Posición, Escala y Transparencia en Salida OBS</h2>
+                    </div>
+                    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;">
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">DESPLAZ. X (px)</label>
+                            <input type="number" id="trOffsetX" value="0" onchange="syncTriples()">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">POS Y ABAJO (px)</label>
+                            <input type="number" id="trPosY" value="48" onchange="syncTriples()">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">ESCALA BARRA (%)</label>
+                            <input type="number" id="trScale" value="100" min="60" max="150" onchange="syncTriples()">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">OPACIDAD FONDO (%)</label>
+                            <input type="number" id="trAlpha" value="95" min="40" max="100" onchange="syncTriples()">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; margin-top:10px;">
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">LOGO COMPETENCIA (px)</label>
+                            <input type="number" id="trCompLogoSize" value="76" min="35" max="120" onchange="syncTriples()">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">LOGO EQUIPO (px)</label>
+                            <input type="number" id="trTeamLogoSize" value="74" min="35" max="115" onchange="syncTriples()">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; color:var(--text-muted);">META MANUAL (Opcional)</label>
+                            <input type="number" id="trManualTarget" placeholder="Auto" min="0" onchange="syncTriples()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: PARTICIPANTES GUARDADOS EN FIREBASE -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Participantes del Torneo</h2>
+                    <div style="display:flex; gap:5px;">
+                        <button class="btn-dark" style="padding:4px 8px; font-size:10px;" onclick="clearAllScores()">↺ Limpiar Pts</button>
+                        <button class="btn-red" style="padding:4px 8px; font-size:10px;" onclick="clearRoster()">🗑 Vaciar</button>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1.3fr 1.1fr 0.6fr auto; gap:6px; margin-bottom:10px;">
+                    <input type="text" id="newPName" placeholder="Nombre tirador...">
+                    <select id="newPTeamSelect"></select>
+                    <select id="newPCat">
+                        <option value="35">+35</option>
+                        <option value="40">+40</option>
+                        <option value="TC">TC</option>
+                    </select>
+                    <button class="btn-gold" style="padding:7px 10px;" onclick="addParticipant()">+</button>
+                </div>
+
+                <div style="max-height:470px; overflow-y:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Escudo</th>
+                                <th>Jugador</th>
+                                <th>Equipo</th>
+                                <th>Cat</th>
+                                <th>Pts</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rosterBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, watchAdminAuth, ref, set, push, update, remove, onValue } from "./js/firebase-config.js";
+
+        const params = new URLSearchParams(window.location.search);
+        window.compId = params.get("comp") || localStorage.getItem("tf_selected_comp_id") || "";
+        if (!window.compId) window.location.href = "index.html";
+
+        let compData = {};
+        let roster = {};
+        let activePlayerId = "";
+        let overlayVisible = true;
+
+        let roundMode = "oficial";
+        let timeMs = 60000;
+        let timerRunning = false;
+        let lastTick = null;
+        let rafId = null;
+        let lastClockPush = 0;
+
+        let shots = [];
+        let moneyStatus = "available";
+        let halfStatus = "available";
+
+        watchAdminAuth(
+            () => initModule(),
+            () => { window.location.href = "index.html"; }
+        );
+
+        function initModule() {
+            onValue(ref(db, `tf_studio/competitions/${window.compId}`), (snap) => {
+                compData = snap.val() || {};
+                document.getElementById("compBadge").textContent = (compData.name || "TORNEO").toUpperCase();
+                populateTeamSelector();
+                renderRoster();
+                updateHUD();
+            });
+
+            onValue(ref(db, `tf_studio/triples_roster/${window.compId}`), (snap) => {
+                roster = snap.val() || {};
+                const keys = Object.keys(roster);
+                if (!activePlayerId || !roster[activePlayerId]) {
+                    activePlayerId = keys[0] || "";
+                }
+                renderRoster();
+                updateHUD();
+                syncTriples();
+            });
+        }
+
+        function populateTeamSelector() {
+            const sel = document.getElementById("newPTeamSelect");
+            const teams = compData.teams || {};
+            const keys = Object.keys(teams);
+            sel.innerHTML = `<option value="">-- Equipo --</option>` + keys.map((k) =>
+                `<option value="${teams[k].name}">${teams[k].name}</option>`
+            ).join("");
+        }
+
+        function getTeamLogoByName(teamName) {
+            const teams = compData.teams || {};
+            const target = (teamName || "").trim().toUpperCase();
+            for (const k of Object.keys(teams)) {
+                if ((teams[k].name || "").trim().toUpperCase() === target) {
+                    return teams[k].logo || "";
+                }
+            }
+            return "";
+        }
+
+        function calcScore() {
+            return shots.reduce((acc, s) => acc + s.pts, 0);
+        }
+
+        function calcTarget() {
+            const manual = document.getElementById("trManualTarget").value;
+            if (manual !== "" && !isNaN(parseInt(manual, 10))) return parseInt(manual, 10);
+            const act = roster[activePlayerId];
+            const cat = act ? act.cat : "35";
+            let max = 0;
+            Object.keys(roster).forEach((k) => {
+                if (k !== activePlayerId && roster[k].cat === cat && typeof roster[k].bestScore === "number" && roster[k].bestScore > max) {
+                    max = roster[k].bestScore;
+                }
+            });
+            return max;
+        }
+
+        function formatClock(ms) {
+            if (roundMode === "muerte_subita") return "SÚBITA";
+            const totalTenths = Math.max(0, Math.ceil(ms / 100));
+            const secs = Math.floor(totalTenths / 10);
+            const tenths = totalTenths % 10;
+            if (secs >= 60) {
+                const mins = Math.floor(secs / 60);
+                const rem = secs % 60;
+                return `${mins}:${rem < 10 ? "0" : ""}${rem}.${tenths}`;
+            }
+            return `${secs < 10 ? "0" : ""}${secs}.${tenths}`;
+        }
+
+        window.toggleTriplesOverlay = () => {
+            overlayVisible = !overlayVisible;
+            const btn = document.getElementById("btnOverlaySwitch");
+            btn.textContent = overlayVisible ? "● EN AIRE" : "● OFF AIR";
+            btn.className = overlayVisible ? "btn-green" : "btn-dark";
+            syncTriples();
+        };
+
+        window.toggleTimer = () => {
+            if (roundMode === "muerte_subita") return;
+            const btn = document.getElementById("btnTimer");
+            if (timerRunning) {
+                timerRunning = false;
+                cancelAnimationFrame(rafId);
+                btn.textContent = "▶ REANUDAR [Espacio]";
+                btn.className = "btn-green";
+                syncTriples();
+            } else {
+                if (timeMs <= 0) timeMs = (roundMode === "desempate30") ? 30000 : 60000;
+                timerRunning = true;
+                lastTick = performance.now();
+                btn.textContent = "⏸ PAUSAR [Espacio]";
+                btn.className = "btn-gold";
+                rafId = requestAnimationFrame(tick);
+            }
+        };
+
+        function tick(now) {
+            if (!timerRunning) return;
+            const dt = now - lastTick;
+            lastTick = now;
+            timeMs -= dt;
+            if (timeMs <= 0) {
+                timeMs = 0;
+                timerRunning = false;
+                const btn = document.getElementById("btnTimer");
+                btn.textContent = "▶ REINICIAR [Espacio]";
+                btn.className = "btn-green";
+                updateHUD();
+                syncTriples();
+                return;
+            }
+            updateHUD();
+            if (now - lastClockPush >= 100) {
+                lastClockPush = now;
+                syncTriples();
+            }
+            rafId = requestAnimationFrame(tick);
+        }
+
+        window.setMode = (mode) => {
+            timerRunning = false;
+            cancelAnimationFrame(rafId);
+            roundMode = mode;
+            shots = [];
+            moneyStatus = (mode === "oficial") ? "available" : "disabled";
+            halfStatus = (mode === "oficial") ? "available" : "disabled";
+            timeMs = mode === "oficial" ? 60000 : mode === "desempate30" ? 30000 : 0;
+            const btn = document.getElementById("btnTimer");
+            btn.textContent = "▶ INICIAR [Espacio]";
+            btn.className = "btn-green";
+            updateHUD();
+            syncTriples();
+        };
+
+        window.addShot = (type) => {
+            if (type === "triple") shots.push({ type: "triple", pts: 1 });
+            else if (type === "fallo") shots.push({ type: "fallo", pts: 0 });
+            else if (type === "money" && roundMode === "oficial" && moneyStatus === "available") {
+                shots.push({ type: "money", pts: 3 });
+                moneyStatus = "made";
+            } else if (type === "half" && roundMode === "oficial" && halfStatus === "available") {
+                shots.push({ type: "half", pts: 3 });
+                halfStatus = "made";
+            }
+            updateHUD();
+            syncTriples();
+        };
+
+        window.missSpecial = (which) => {
+            if (roundMode !== "oficial") return;
+            if (which === "money" && moneyStatus === "available") {
+                moneyStatus = "missed";
+                shots.push({ type: "money_miss", pts: 0 });
+            } else if (which === "half" && halfStatus === "available") {
+                halfStatus = "missed";
+                shots.push({ type: "half_miss", pts: 0 });
+            }
+            updateHUD();
+            syncTriples();
+        };
+
+        window.undoShot = () => {
+            if (!shots.length) return;
+            const last = shots.pop();
+            if (last.type === "money" || last.type === "money_miss") moneyStatus = "available";
+            if (last.type === "half" || last.type === "half_miss") halfStatus = "available";
+            updateHUD();
+            syncTriples();
+        };
+
+        window.addParticipant = async () => {
+            const name = document.getElementById("newPName").value.trim();
+            const team = document.getElementById("newPTeamSelect").value || "SIN EQUIPO";
+            const cat = document.getElementById("newPCat").value;
+            if (!name) return;
+            const newRef = push(ref(db, `tf_studio/triples_roster/${window.compId}`));
+            await set(newRef, { name, team, cat, bestScore: null });
+            document.getElementById("newPName").value = "";
+        };
+
+        window.selectPlayer = (id) => {
+            activePlayerId = id;
+            window.setMode(roundMode);
+            renderRoster();
+        };
+
+        window.savePlayerScore = async () => {
+            if (!activePlayerId || !roster[activePlayerId]) return;
+            await update(ref(db, `tf_studio/triples_roster/${window.compId}/${activePlayerId}`), {
+                bestScore: calcScore()
+            });
+        };
+
+        window.deleteParticipant = async (id) => {
+            if (!confirm("¿Eliminar este participante?")) return;
+            await remove(ref(db, `tf_studio/triples_roster/${window.compId}/${id}`));
+        };
+
+        window.clearAllScores = async () => {
+            if (!confirm("¿Reiniciar todos los puntajes de la tabla?")) return;
+            const updates = {};
+            Object.keys(roster).forEach((k) => { updates[`${k}/bestScore`] = null; });
+            await update(ref(db, `tf_studio/triples_roster/${window.compId}`), updates);
+        };
+
+        window.clearRoster = async () => {
+            if (!confirm("¿Vaciar toda la lista de participantes?")) return;
+            await remove(ref(db, `tf_studio/triples_roster/${window.compId}`));
+        };
+
+        function updateHUD() {
+            const p = roster[activePlayerId] || null;
+            document.getElementById("hudName").textContent = p ? p.name : "SIN PARTICIPANTES";
+            document.getElementById("hudMeta").textContent = p ? `${p.team} • CAT +${p.cat}` : "AGREGA JUGADORES A LA DERECHA";
+            document.getElementById("hudScore").textContent = calcScore();
+            document.getElementById("hudTarget").textContent = calcTarget() + " PTS";
+
+            const logoImg = document.getElementById("hudTeamLogo");
+            const tLogo = p ? getTeamLogoByName(p.team) : "";
+            if (tLogo) {
+                logoImg.src = tLogo;
+                logoImg.style.display = "block";
+            } else {
+                logoImg.style.display = "none";
+            }
+
+            const clk = document.getElementById("hudClock");
+            clk.textContent = formatClock(timeMs);
+            clk.style.color = (roundMode !== "muerte_subita" && timeMs <= 10000 && timeMs > 0) ? "#ef4444" : "#fff";
+
+            const isOf = roundMode === "oficial";
+            document.getElementById("btnMoney").disabled = !(isOf && moneyStatus === "available");
+            document.getElementById("btnHalf").disabled = !(isOf && halfStatus === "available");
+            document.getElementById("btnMissMoney").disabled = !(isOf && moneyStatus === "available");
+            document.getElementById("btnMissHalf").disabled = !(isOf && halfStatus === "available");
+
+            document.getElementById("shotStrip").innerHTML = shots.map((s) => {
+                if (s.type === "triple") return `<span class="badge-b b-1">+1</span>`;
+                if (s.type === "money") return `<span class="badge-b b-m">+3</span>`;
+                if (s.type === "half") return `<span class="badge-b b-h">MC</span>`;
+                return `<span class="badge-b b-0">✕</span>`;
+            }).join("");
+        }
+
+        function renderRoster() {
+            const tbody = document.getElementById("rosterBody");
+            const keys = Object.keys(roster);
+            if (!keys.length) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:16px;">No hay tiradores inscritos aún.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = keys.map((id) => {
+                const p = roster[id];
+                const isAct = id === activePlayerId;
+                const logo = getTeamLogoByName(p.team);
+                return `
+                    <tr class="${isAct ? "act-row" : ""}">
+                        <td>${logo ? `<img src="${logo}" style="width:26px;height:26px;object-fit:contain;">` : "-"}</td>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.team}</td>
+                        <td>+${p.cat}</td>
+                        <td style="color:var(--tf-gold); font-weight:800;">${p.bestScore ?? "-"}</td>
+                        <td style="white-space:nowrap;">
+                            <button class="${isAct ? "btn-gold" : "btn-dark"}" style="padding:4px 7px; font-size:10px;" onclick="window.selectPlayer('${id}')">${isAct ? "EN CANCHA" : "ELEGIR"}</button>
+                            <button class="btn-red" style="padding:4px 7px; font-size:10px;" onclick="window.deleteParticipant('${id}')">✕</button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        window.syncTriples = () => {
+            const p = roster[activePlayerId] || { name: "ESPERANDO JUGADOR", team: "", cat: "35" };
+            set(ref(db, `tf_studio/live/${window.compId}/triples`), {
+                visible: overlayVisible,
+                title: compData.name || "TORNEO TRIPLES",
+                stage: document.getElementById("cfgStage").value,
+                teamLogo: getTeamLogoByName(p.team),
+                compLogoSize: parseInt(document.getElementById("trCompLogoSize").value, 10) || 76,
+                teamLogoSize: parseInt(document.getElementById("trTeamLogoSize").value, 10) || 74,
+                offsetX: parseInt(document.getElementById("trOffsetX").value, 10) || 0,
+                posY: parseInt(document.getElementById("trPosY").value, 10) || 48,
+                scale: parseInt(document.getElementById("trScale").value, 10) || 100,
+                bgAlpha: parseInt(document.getElementById("trAlpha").value, 10) || 95,
+                player: p,
+                score: calcScore(),
+                targetScore: calcTarget(),
+                clockText: formatClock(timeMs),
+                isDangerTime: (roundMode !== "muerte_subita" && timeMs <= 10000 && timeMs > 0),
+                roundMode,
+                shots,
+                moneyStatus,
+                halfStatus
+            });
+        };
+
+        document.addEventListener("keydown", (e) => {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+            if (e.code === "Space") { e.preventDefault(); window.toggleTimer(); }
+            else if (e.key === "1" || e.code === "ArrowRight") { e.preventDefault(); window.addShot("triple"); }
+            else if (e.key === "0" || e.code === "ArrowLeft") { e.preventDefault(); window.addShot("fallo"); }
+            else if (e.key.toLowerCase() === "e") { e.preventDefault(); window.addShot("money"); }
+            else if (e.key.toLowerCase() === "m") { e.preventDefault(); window.addShot("half"); }
+            else if (e.code === "Backspace") { e.preventDefault(); window.undoShot(); }
+        });
+    </script>
+</body>
+</html>
