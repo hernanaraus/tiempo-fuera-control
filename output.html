@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tiempo Fuera — Salida Única Broadcast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700;1,800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Barlow Condensed', sans-serif; }
+        html, body {
+            background: transparent !important;
+            overflow: hidden;
+        }
+        #masterCanvas {
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+            background: transparent !important;
+            overflow: hidden;
+        }
+
+        /* =========================================================
+           CAPA 1: BUG AUTOMÁTICO RR.SS. (@tiempofuera_cl) - SUP IZQ
+           ========================================================= */
+        .social-bug {
+            position: absolute;
+            top: 42px;
+            left: 48px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(12, 14, 19, 0.88);
+            border-left: 4px solid #e11d2a;
+            border-radius: 0 10px 10px 0;
+            padding: 10px 18px 10px 14px;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            opacity: 0;
+            transform: translateX(-40px);
+            transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+            z-index: 40;
+        }
+        .social-bug.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .social-icons {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .social-icon-pill {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-ig { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); }
+        .icon-yt { background: #ff0000; }
+        .social-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+        .social-handle {
+            font-size: 22px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 0.6px;
+        }
+        .social-sub {
+            font-size: 11px;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* =========================================================
+           CAPA 2: TERCIO INFERIOR (RELATORES / PRESENTADORES)
+           ========================================================= */
+        .lower-third-layer {
+            position: absolute;
+            bottom: 64px;
+            left: 64px;
+            transform-origin: bottom left;
+            opacity: 0;
+            transform: translateY(35px);
+            transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+            z-index: 30;
+        }
+        .lower-third-layer.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .lt-card {
+            display: flex;
+            align-items: stretch;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.8);
+            border-left: 6px solid #e11d2a;
+            background: rgba(16, 19, 26, 0.94);
+        }
+        .lt-logo-slot {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.45);
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .lt-logo-slot.empty { display: none; }
+        .lt-logo-slot img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8));
+        }
+        .lt-body {
+            padding: 12px 28px 12px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .lt-kicker {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #e5b84b;
+            margin-bottom: 2px;
+        }
+        .lt-title {
+            font-size: 36px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            line-height: 0.98;
+            letter-spacing: 0.5px;
+        }
+        .lt-subtitle {
+            font-size: 17px;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            margin-top: 3px;
+        }
+
+        /* =========================================================
+           CAPA 3: TARJETA DE AUSPICIADOR / SPONSOR
+           ========================================================= */
+        .sponsor-layer {
+            position: absolute;
+            bottom: 64px;
+            right: 64px;
+            transform-origin: bottom right;
+            opacity: 0;
+            transform: translateY(35px);
+            transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+            z-index: 28;
+        }
+        .sponsor-layer.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .sponsor-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 22px;
+            border-radius: 10px;
+            background: rgba(16, 19, 26, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-right: 5px solid #e5b84b;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.8);
+        }
+        .sponsor-logo-wrap {
+            width: 82px;
+            height: 82px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .sponsor-logo-wrap.empty { display: none; }
+        .sponsor-logo-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.28));
+        }
+        .sponsor-logo-wrap.watermark img {
+            filter: brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+            opacity: 0.72;
+        }
+        .sponsor-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .sponsor-tag {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #e5b84b;
+        }
+        .sponsor-name {
+            font-size: 28px;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            line-height: 1.02;
+        }
+        .sponsor-slogan {
+            font-size: 14px;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        /* =========================================================
+           CAPA 4: BARRA COMPETENCIA DE TRIPLES (ESTILO NBA)
+           ========================================================= */
+        .triples-layer {
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            z-index: 25;
+        }
+        .triples-layer.show {
+            opacity: 1;
+        }
+        .brand-tag-top {
+            text-align: right;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.78);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+        }
+        .nba-bar {
+            display: flex;
+            align-items: stretch;
+            min-height: 98px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85);
+            border: 2px solid #e5b84b;
+            background: rgba(16, 19, 26, 0.95);
+        }
+        .block-comp-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 16px;
+            background: rgba(0, 0, 0, 0.42);
+            border-right: 1px solid rgba(255, 255, 255, 0.16);
+            flex-shrink: 0;
+        }
+        .block-comp-logo.empty { display: none; }
+        .comp-logo-box {
+            width: 76px;
+            height: 76px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .comp-logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.32)) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
+        }
+        .comp-logo-box.watermark img {
+            filter: brightness(0) invert(1);
+            opacity: 0.72;
+        }
+        .block-meta {
+            padding: 10px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+            min-width: 235px;
+            background: rgba(0, 0, 0, 0.32);
+        }
+        .meta-title {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #e5b84b;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .meta-stage {
+            font-size: 13px;
+            font-weight: 700;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-top: 1px;
+        }
+        .meta-target {
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            width: fit-content;
+        }
+        .meta-target span { color: #e5b84b; font-size: 17px; }
+
+        .block-player {
+            padding: 8px 24px 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 310px;
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+        }
+        .team-logo-box {
+            width: 74px;
+            height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .team-logo-box.empty { display: none; }
+        .team-logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.38)) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.95));
+        }
+        .player-info-col { display: flex; flex-direction: column; justify-content: center; }
+        .player-cat-badge {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            color: #111;
+            background: #e5b84b;
+            padding: 1px 8px;
+            border-radius: 3px;
+            width: fit-content;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .player-name {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            text-transform: uppercase;
+            line-height: 0.98;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .player-team {
+            font-size: 15px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .block-score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 24px;
+            background: linear-gradient(180deg, rgba(229, 184, 75, 0.22) 0%, rgba(229, 184, 75, 0.06) 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+            min-width: 125px;
+        }
+        .block-score small, .block-clock small {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.4px;
+            color: #cbd5e1;
+            text-transform: uppercase;
+        }
+        .score-num {
+            font-size: 56px;
+            font-weight: 900;
+            color: #e5b84b;
+            line-height: 0.92;
+            font-variant-numeric: tabular-nums;
+        }
+        .block-clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 24px;
+            background: rgba(0, 0, 0, 0.45);
+            border-right: 1px solid rgba(255, 255, 255, 0.14);
+            min-width: 155px;
+        }
+        .clock-num {
+            font-size: 50px;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 0.95;
+            font-variant-numeric: tabular-nums;
+        }
+        .clock-num.danger {
+            color: #ef4444;
+            animation: pulseRed 0.6s infinite alternate;
+        }
+        @keyframes pulseRed { from { opacity: 1; } to { opacity: 0.55; } }
+        .block-racks {
+            padding: 10px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 390px;
+        }
+        .special-row { display: flex; gap: 10px; align-items: center; }
+        .special-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 3px 11px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+        }
+        .special-pill .dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; }
+        .special-pill.made-money { background: linear-gradient(135deg, #f59e0b, #ea580c); color: #111; border-color: #fde047; }
+        .special-pill.made-money .dot { background: #fff; }
+        .special-pill.made-half { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border-color: #93c5fd; }
+        .special-pill.made-half .dot { background: #fde047; }
+        .special-pill.missed { opacity: 0.38; text-decoration: line-through; }
+        .balls-strip { display: flex; align-items: center; gap: 5px; height: 28px; overflow: hidden; }
+        .shot-ball {
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 900; flex-shrink: 0;
+        }
+        .shot-ball.make { background: radial-gradient(circle at 30% 30%, #fb923c, #c2410c); color: #fff; border: 1.5px solid #fed7aa; }
+        .shot-ball.money { background: radial-gradient(circle at 30% 30%, #fde047, #d97706); color: #111; border: 1.5px solid #fff; }
+        .shot-ball.half { background: radial-gradient(circle at 30% 30%, #60a5fa, #1d4ed8); color: #fff; border: 1.5px solid #dbeafe; }
+        .shot-ball.miss { background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.35); border: 1px solid rgba(255, 255, 255, 0.14); }
+    </style>
+</head>
+<body>
+    <div id="masterCanvas">
+        <!-- CAPA 1: BUG RR.SS. @tiempofuera_cl -->
+        <div class="social-bug" id="socialBug">
+            <div class="social-icons">
+                <div class="social-icon-pill icon-ig">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.3">
+                        <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                        <circle cx="12" cy="12" r="4.5"></circle>
+                        <circle cx="17.5" cy="6.5" r="1.2" fill="#fff" stroke="none"></circle>
+                    </svg>
+                </div>
+                <div class="social-icon-pill icon-yt">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff">
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="social-text">
+                <div class="social-handle" id="socialHandleText">@TIEMPOFUERA_CL</div>
+                <div class="social-sub">INSTAGRAM &bull; YOUTUBE EN VIVO</div>
+            </div>
+        </div>
+
+        <!-- CAPA 2: TERCIO INFERIOR RELATORES / PRESENTADORES -->
+        <div class="lower-third-layer" id="lowerThirdLayer">
+            <div class="lt-card" id="ltCard">
+                <div class="lt-logo-slot empty" id="ltLogoSlot"></div>
+                <div class="lt-body">
+                    <div class="lt-kicker" id="ltKicker">TRANSMISIÓN OFICIAL</div>
+                    <div class="lt-title" id="ltTitle">HERNÁN ARAUS</div>
+                    <div class="lt-subtitle" id="ltSubtitle">RELATO Y CONDUCCIÓN</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPA 3: TARJETA AUSPICIADOR / SPONSOR -->
+        <div class="sponsor-layer" id="sponsorLayer">
+            <div class="sponsor-card" id="sponsorCard">
+                <div class="sponsor-logo-wrap empty" id="sponsorLogoWrap"></div>
+                <div class="sponsor-info">
+                    <div class="sponsor-tag" id="sponsorTag">AUSPICIADOR OFICIAL</div>
+                    <div class="sponsor-name" id="sponsorName">MARCA PATROCINADORA</div>
+                    <div class="sponsor-slogan" id="sponsorSlogan">Apoyando el básquetbol nacional</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPA 4: COMPETENCIA DE TRIPLES -->
+        <div class="triples-layer" id="triplesLayer">
+            <div class="brand-tag-top">TIEMPO FUERA &bull; TRANSMISIÓN OFICIAL</div>
+            <div class="nba-bar" id="nbaBar">
+                <div class="block-comp-logo empty" id="ovCompLogoBlock">
+                    <div class="comp-logo-box" id="ovCompLogoBox"></div>
+                </div>
+                <div class="block-meta">
+                    <div class="meta-title" id="ovTitle">TORNEO TRIPLES</div>
+                    <div class="meta-stage" id="ovStage">GRUPO A</div>
+                    <div class="meta-target">A SUPERAR: <span id="ovTarget">0 PTS</span></div>
+                </div>
+                <div class="block-player">
+                    <div class="team-logo-box empty" id="ovTeamLogoBox"></div>
+                    <div class="player-info-col">
+                        <div class="player-cat-badge" id="ovCat">CATEGORÍA +35</div>
+                        <div class="player-name" id="ovName">JUGADOR</div>
+                        <div class="player-team" id="ovTeam">EQUIPO</div>
+                    </div>
+                </div>
+                <div class="block-score">
+                    <small>PUNTOS</small>
+                    <div class="score-num" id="ovScore">0</div>
+                </div>
+                <div class="block-clock">
+                    <small>TIEMPO</small>
+                    <div class="clock-num" id="ovClock">1:00.0</div>
+                </div>
+                <div class="block-racks">
+                    <div class="special-row" id="ovSpecialRow">
+                        <div class="special-pill" id="ovPillMoney"><span class="dot"></span> BALÓN ESPECIAL (+3)</div>
+                        <div class="special-pill" id="ovPillHalf"><span class="dot"></span> MEDIA CANCHA (+3)</div>
+                    </div>
+                    <div class="balls-strip" id="ovBallsStrip"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, ref, onValue } from "./js/firebase-config.js";
+
+        const params = new URLSearchParams(window.location.search);
+        const compId = params.get("comp") || localStorage.getItem("tf_selected_comp_id") || "";
+
+        let compData = {};
+        let liveData = {};
+        let socialTimer = null;
+        let lastManualPing = 0;
+
+        function hexToRgba(hex, alpha) {
+            hex = (hex || "#10131a").replace("#", "");
+            const r = parseInt(hex.substring(0, 2), 16) || 16;
+            const g = parseInt(hex.substring(2, 4), 16) || 19;
+            const b = parseInt(hex.substring(4, 6), 16) || 26;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        function applyCanvasResolution() {
+            const res = (liveData.canvasOverride && liveData.canvasOverride !== "AUTO")
+                ? liveData.canvasOverride
+                : (compData.resolution || "1920x1080");
+            const canvas = document.getElementById("masterCanvas");
+            if (res === "2560x1440") {
+                canvas.style.width = "2560px";
+                canvas.style.height = "1440px";
+            } else {
+                canvas.style.width = "1920px";
+                canvas.style.height = "1080px";
+            }
+        }
+
+        // BUG AUTOMÁTICO DE RR.SS. CADA 5 MINUTOS (O SEGÚN CONFIGURACIÓN)
+        function triggerSocialBug(durationSec = 10) {
+            const bug = document.getElementById("socialBug");
+            bug.classList.add("show");
+            setTimeout(() => {
+                bug.classList.remove("show");
+            }, durationSec * 1000);
+        }
+
+        function setupSocialLoop() {
+            if (socialTimer) clearInterval(socialTimer);
+            const cfg = liveData.social || {};
+            document.getElementById("socialHandleText").textContent = cfg.handle || "@TIEMPOFUERA_CL";
+
+            if (cfg.enabled === false) return;
+            const intervalMin = Math.max(1, parseInt(cfg.intervalMin || 5, 10));
+            const durationSec = Math.max(4, parseInt(cfg.durationSec || 10, 10));
+
+            socialTimer = setInterval(() => {
+                triggerSocialBug(durationSec);
+            }, intervalMin * 60 * 1000);
+        }
+
+        function renderAllLayers() {
+            applyCanvasResolution();
+
+            const palette = compData.palette || { primary: "#12151c", secondary: "#e11d2a", accent: "#e5b84b" };
+
+            // 1. TERCIO INFERIOR RELATORES
+            const lt = liveData.lowerThird || {};
+            const ltLayer = document.getElementById("lowerThirdLayer");
+            const ltCard = document.getElementById("ltCard");
+            if (lt.visible) {
+                ltLayer.classList.add("show");
+            } else {
+                ltLayer.classList.remove("show");
+            }
+            const ltScale = (lt.scale || 100) / 100;
+            const ltX = lt.posX ?? 64;
+            const ltY = lt.posY ?? 64;
+            ltLayer.style.left = ltX + "px";
+            ltLayer.style.bottom = ltY + "px";
+            ltLayer.style.transform = lt.visible ? `translateY(0) scale(${ltScale})` : `translateY(35px) scale(${ltScale})`;
+
+            ltCard.style.background = hexToRgba(palette.primary, (lt.bgAlpha ?? 94) / 100);
+            ltCard.style.borderLeftColor = palette.secondary;
+            document.getElementById("ltKicker").style.color = palette.accent;
+            document.getElementById("ltKicker").textContent = lt.kicker || "TRANSMISIÓN OFICIAL";
+            document.getElementById("ltTitle").textContent = lt.title || "";
+            document.getElementById("ltSubtitle").textContent = lt.subtitle || "";
+
+            const ltLogoSlot = document.getElementById("ltLogoSlot");
+            if (lt.showCompLogo !== false && compData.logo) {
+                ltLogoSlot.classList.remove("empty");
+                ltLogoSlot.innerHTML = `<img src="${compData.logo}" alt="">`;
+            } else {
+                ltLogoSlot.classList.add("empty");
+            }
+
+            // 2. AUSPICIADOR / SPONSOR
+            const sp = liveData.sponsor || {};
+            const spLayer = document.getElementById("sponsorLayer");
+            const spCard = document.getElementById("sponsorCard");
+            if (sp.visible) spLayer.classList.add("show");
+            else spLayer.classList.remove("show");
+
+            const spScale = (sp.scale || 100) / 100;
+            spLayer.style.right = (sp.posX ?? 64) + "px";
+            spLayer.style.bottom = (sp.posY ?? 64) + "px";
+            spLayer.style.transform = sp.visible ? `translateY(0) scale(${spScale})` : `translateY(35px) scale(${spScale})`;
+
+            spCard.style.background = hexToRgba(palette.primary, (sp.bgAlpha ?? 92) / 100);
+            spCard.style.borderRightColor = palette.accent;
+            document.getElementById("sponsorTag").style.color = palette.accent;
+            document.getElementById("sponsorTag").textContent = sp.tag || "AUSPICIADOR OFICIAL";
+            document.getElementById("sponsorName").textContent = sp.name || "";
+            document.getElementById("sponsorSlogan").textContent = sp.slogan || "";
+
+            const spLogoWrap = document.getElementById("sponsorLogoWrap");
+            if (sp.logo) {
+                spLogoWrap.classList.remove("empty");
+                spLogoWrap.classList.toggle("watermark", !!sp.watermarkMode);
+                spLogoWrap.innerHTML = `<img src="${sp.logo}" alt="">`;
+            } else {
+                spLogoWrap.classList.add("empty");
+            }
+
+            // 3. COMPETENCIA DE TRIPLES
+            const tr = liveData.triples || {};
+            const trLayer = document.getElementById("triplesLayer");
+            const nbaBar = document.getElementById("nbaBar");
+            if (tr.visible) trLayer.classList.add("show");
+            else trLayer.classList.remove("show");
+
+            const trScale = (tr.scale || 100) / 100;
+            const trOffsetX = tr.offsetX || 0;
+            const trBottom = tr.posY ?? 48;
+            trLayer.style.left = `calc(50% + ${trOffsetX}px)`;
+            trLayer.style.bottom = trBottom + "px";
+            trLayer.style.transform = `translateX(-50%) scale(${trScale})`;
+
+            nbaBar.style.background = hexToRgba(palette.primary, (tr.bgAlpha ?? 95) / 100);
+            nbaBar.style.borderColor = palette.accent;
+
+            const compBlock = document.getElementById("ovCompLogoBlock");
+            const compBox = document.getElementById("ovCompLogoBox");
+            const cSize = tr.compLogoSize || 76;
+            compBox.style.width = cSize + "px";
+            compBox.style.height = cSize + "px";
+            compBox.classList.toggle("watermark", !!compData.watermarkMode);
+            if (compData.logo) {
+                compBlock.classList.remove("empty");
+                compBox.innerHTML = `<img src="${compData.logo}" alt="">`;
+            } else {
+                compBlock.classList.add("empty");
+            }
+
+            const teamBox = document.getElementById("ovTeamLogoBox");
+            const tSize = tr.teamLogoSize || 74;
+            teamBox.style.width = tSize + "px";
+            teamBox.style.height = tSize + "px";
+            if (tr.teamLogo) {
+                teamBox.classList.remove("empty");
+                teamBox.innerHTML = `<img src="${tr.teamLogo}" alt="">`;
+            } else {
+                teamBox.classList.add("empty");
+            }
+
+            document.getElementById("ovTitle").textContent = tr.title || compData.name || "TORNEO TRIPLES";
+            document.getElementById("ovTitle").style.color = palette.accent;
+            document.getElementById("ovStage").textContent = tr.stage || "";
+            document.getElementById("ovTarget").textContent = (tr.targetScore || 0) + " PTS";
+            document.getElementById("ovTarget").style.color = palette.accent;
+
+            if (tr.player) {
+                document.getElementById("ovCat").textContent = "CATEGORÍA +" + tr.player.cat;
+                document.getElementById("ovCat").style.background = palette.accent;
+                document.getElementById("ovName").textContent = tr.player.name || "";
+                document.getElementById("ovTeam").textContent = tr.player.team || "";
+            }
+
+            document.getElementById("ovScore").textContent = tr.score ?? 0;
+            document.getElementById("ovScore").style.color = palette.accent;
+
+            const clockEl = document.getElementById("ovClock");
+            clockEl.textContent = tr.clockText || "1:00.0";
+            clockEl.classList.toggle("danger", !!tr.isDangerTime);
+
+            document.getElementById("ovSpecialRow").style.display = (tr.roundMode === "oficial") ? "flex" : "none";
+            document.getElementById("ovPillMoney").className = "special-pill" +
+                (tr.moneyStatus === "made" ? " made-money" : "") +
+                (tr.moneyStatus === "missed" ? " missed" : "");
+            document.getElementById("ovPillHalf").className = "special-pill" +
+                (tr.halfStatus === "made" ? " made-half" : "") +
+                (tr.halfStatus === "missed" ? " missed" : "");
+
+            const shots = (tr.shots || []).slice(-14);
+            document.getElementById("ovBallsStrip").innerHTML = shots.map((s) => {
+                if (s.type === "triple") return `<div class="shot-ball make">3</div>`;
+                if (s.type === "money") return `<div class="shot-ball money">+3</div>`;
+                if (s.type === "half") return `<div class="shot-ball half">MC</div>`;
+                return `<div class="shot-ball miss">✕</div>`;
+            }).join("");
+        }
+
+        if (compId) {
+            onValue(ref(db, `tf_studio/competitions/${compId}`), (snap) => {
+                compData = snap.val() || {};
+                renderAllLayers();
+            });
+            onValue(ref(db, `tf_studio/live/${compId}`), (snap) => {
+                const incoming = snap.val() || {};
+                const prevInterval = liveData.social?.intervalMin;
+                const prevEnabled = liveData.social?.enabled;
+                liveData = incoming;
+
+                if (incoming.social?.manualPing && incoming.social.manualPing !== lastManualPing) {
+                    lastManualPing = incoming.social.manualPing;
+                    triggerSocialBug(incoming.social.durationSec || 10);
+                }
+                if (prevInterval !== incoming.social?.intervalMin || prevEnabled !== incoming.social?.enabled || !socialTimer) {
+                    setupSocialLoop();
+                }
+                renderAllLayers();
+            });
+        }
+    </script>
+</body>
+</html>
