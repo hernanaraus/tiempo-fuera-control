@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zócalos y Auspiciadores — Tiempo Fuera Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        @media (max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } }
+        .preset-row {
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 9px 12px; border-radius: 8px; margin-bottom: 8px;
+        }
+        .preset-row.on-air { border-color: #22c55e; background: rgba(34, 197, 94, 0.12); }
+        .mini-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+        input[type="number"] {
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+            color: #fff; padding: 7px 9px; border-radius: 6px; font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="topbar-brand">
+            <button class="btn-dark" onclick="window.location.href='index.html'">← Lanzador</button>
+            <div class="topbar-title">ZÓCALOS, RELATORES Y <span>SPONSORS</span></div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="compBadge" style="font-size:12px; color:var(--tf-gold); font-weight:800;">CARGANDO...</span>
+            <button class="btn-dark" onclick="window.open('output.html?comp=' + compId, '_blank')">👁 Ver Salida OBS</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- BARRA SUPERIOR: BUG AUTOMÁTICO RR.SS. @tiempofuera_cl -->
+        <div class="card" style="border-left: 4px solid var(--tf-red);">
+            <div class="card-header">
+                <h2>Bug Automático Redes Sociales (@tiempofuera_cl — Esquina Superior Izquierda)</h2>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <label style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="socEnabled" checked onchange="saveSocialConfig()"> Ciclo Automático Activo
+                    </label>
+                    <button class="btn-red" onclick="pingSocialNow()">⚡ Lanzar Ahora en Pantalla</button>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr auto; gap:10px; align-items:end;">
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">USUARIO RR.SS.</label>
+                    <input type="text" id="socHandle" value="@TIEMPOFUERA_CL">
+                </div>
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">CADA CUÁNTOS MINUTOS</label>
+                    <input type="number" id="socInterval" value="5" min="1" max="60">
+                </div>
+                <div>
+                    <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">DURACIÓN EN AIRE (SEG)</label>
+                    <input type="number" id="socDuration" value="10" min="4" max="30">
+                </div>
+                <button class="btn-dark" style="height:36px;" onclick="saveSocialConfig()">Guardar Ciclo</button>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- COLUMNA 1: TERCIOS INFERIORES (PRESENTADORES / RELATORES) -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Tercio Inferior (Relatores / Presentadores)</h2>
+                    <button id="btnToggleLt" class="btn-dark" onclick="toggleLowerThird()">● OFF AIR</button>
+                </div>
+
+                <div class="form-group">
+                    <label>Encabezado Superior (Kicker)</label>
+                    <input type="text" id="ltKicker" value="TRANSMISIÓN OFICIAL TIEMPO FUERA">
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div class="form-group">
+                        <label>Nombre Principal</label>
+                        <input type="text" id="ltTitle" placeholder="Ej: Hernán Araus">
+                    </div>
+                    <div class="form-group">
+                        <label>Rol / Cargo</label>
+                        <input type="text" id="ltSubtitle" placeholder="Ej: Relato y Conducción">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <label style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer;">
+                        <input type="checkbox" id="ltShowLogo" checked> Incluir logo de la competencia
+                    </label>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-dark" onclick="saveLtPreset()">+ Guardar Preset</button>
+                        <button class="btn-green" onclick="pushLowerThird(true)">▶ Mostrar al Aire</button>
+                    </div>
+                </div>
+
+                <div class="mini-grid-3">
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">POS X (IZQ px)</label>
+                        <input type="number" id="ltPosX" value="64" onchange="updateLtGeometry()">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">POS Y (ABAJO px)</label>
+                        <input type="number" id="ltPosY" value="64" onchange="updateLtGeometry()">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">ESCALA % / OPACIDAD %</label>
+                        <div style="display:flex; gap:4px;">
+                            <input type="number" id="ltScale" value="100" min="60" max="150" onchange="updateLtGeometry()">
+                            <input type="number" id="ltAlpha" value="94" min="40" max="100" onchange="updateLtGeometry()">
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-size:12px; color:var(--tf-gold); text-transform:uppercase; margin:16px 0 8px;">Presets Guardados (Un Clic al Aire)</h3>
+                <div id="ltPresetsList"></div>
+            </div>
+
+            <!-- COLUMNA 2: TARJETA DE AUSPICIADORES / SPONSORS -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Auspiciadores / Patrocinadores</h2>
+                    <button id="btnToggleSp" class="btn-dark" onclick="toggleSponsor()">● OFF AIR</button>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div class="form-group">
+                        <label>Etiqueta Superior</label>
+                        <input type="text" id="spTag" value="AUSPICIADOR OFICIAL">
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre de la Marca</label>
+                        <input type="text" id="spName" placeholder="Ej: Gimnasio / Marca">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Bajada / Slogan / Contacto</label>
+                    <input type="text" id="spSlogan" placeholder="Ej: @marca • Indumentaria Deportiva">
+                </div>
+                <div class="form-group">
+                    <label>Logo Auspiciador PNG (Opcional)</label>
+                    <input type="file" id="spLogoInput" accept="image/png,image/webp,image/jpeg">
+                    <label style="font-size:12px; display:flex; align-items:center; gap:6px; margin-top:6px; cursor:pointer; color:#fff;">
+                        <input type="checkbox" id="spWatermark"> Modo Marca de Agua (Ideal logos blancos)
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; gap:6px; margin-bottom:8px;">
+                    <button class="btn-dark" onclick="saveSponsorPreset()">+ Guardar Auspiciador</button>
+                    <button class="btn-green" onclick="pushSponsor(true)">▶ Mostrar al Aire</button>
+                </div>
+
+                <div class="mini-grid-3">
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">POS X (DER px)</label>
+                        <input type="number" id="spPosX" value="64" onchange="updateSpGeometry()">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">POS Y (ABAJO px)</label>
+                        <input type="number" id="spPosY" value="64" onchange="updateSpGeometry()">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted);">ESCALA % / OPACIDAD %</label>
+                        <div style="display:flex; gap:4px;">
+                            <input type="number" id="spScale" value="100" min="60" max="150" onchange="updateSpGeometry()">
+                            <input type="number" id="spAlpha" value="92" min="40" max="100" onchange="updateSpGeometry()">
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="font-size:12px; color:var(--tf-gold); text-transform:uppercase; margin:16px 0 8px;">Auspiciadores Guardados</h3>
+                <div id="spPresetsList"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { db, watchAdminAuth, ref, set, push, update, remove, onValue } from "./js/firebase-config.js";
+        import { processLogoImage } from "./js/palette-extractor.js";
+
+        const params = new URLSearchParams(window.location.search);
+        window.compId = params.get("comp") || localStorage.getItem("tf_selected_comp_id") || "";
+        if (!window.compId) window.location.href = "index.html";
+
+        let liveState = {};
+        let currentSpLogo = "";
+
+        watchAdminAuth(
+            () => initModule(),
+            () => { window.location.href = "index.html"; }
+        );
+
+        document.getElementById("spLogoInput").addEventListener("change", async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            const res = await processLogoImage(file, 300);
+            currentSpLogo = res.dataUrl;
+            document.getElementById("spWatermark").checked = res.isMostlyWhite;
+        });
+
+        function initModule() {
+            onValue(ref(db, `tf_studio/competitions/${window.compId}`), (snap) => {
+                const c = snap.val() || {};
+                document.getElementById("compBadge").textContent = (c.name || "COMPETENCIA").toUpperCase();
+                renderPresets(c.ltPresets || {}, c.spPresets || {});
+            });
+
+            onValue(ref(db, `tf_studio/live/${window.compId}`), (snap) => {
+                liveState = snap.val() || {};
+                const ltOn = !!liveState.lowerThird?.visible;
+                const spOn = !!liveState.sponsor?.visible;
+
+                const btnLt = document.getElementById("btnToggleLt");
+                btnLt.textContent = ltOn ? "● EN AIRE (APAGAR)" : "● OFF AIR";
+                btnLt.className = ltOn ? "btn-green" : "btn-dark";
+
+                const btnSp = document.getElementById("btnToggleSp");
+                btnSp.textContent = spOn ? "● EN AIRE (APAGAR)" : "● OFF AIR";
+                btnSp.className = spOn ? "btn-green" : "btn-dark";
+            });
+        }
+
+        window.saveSocialConfig = async () => {
+            await update(ref(db, `tf_studio/live/${window.compId}/social`), {
+                enabled: document.getElementById("socEnabled").checked,
+                handle: document.getElementById("socHandle").value.trim() || "@TIEMPOFUERA_CL",
+                intervalMin: parseInt(document.getElementById("socInterval").value, 10) || 5,
+                durationSec: parseInt(document.getElementById("socDuration").value, 10) || 10
+            });
+        };
+
+        window.pingSocialNow = async () => {
+            await update(ref(db, `tf_studio/live/${window.compId}/social`), {
+                enabled: document.getElementById("socEnabled").checked,
+                handle: document.getElementById("socHandle").value.trim() || "@TIEMPOFUERA_CL",
+                durationSec: parseInt(document.getElementById("socDuration").value, 10) || 10,
+                manualPing: Date.now()
+            });
+        };
+
+        window.pushLowerThird = async (visible) => {
+            await set(ref(db, `tf_studio/live/${window.compId}/lowerThird`), {
+                visible,
+                kicker: document.getElementById("ltKicker").value,
+                title: document.getElementById("ltTitle").value,
+                subtitle: document.getElementById("ltSubtitle").value,
+                showCompLogo: document.getElementById("ltShowLogo").checked,
+                posX: parseInt(document.getElementById("ltPosX").value, 10) || 64,
+                posY: parseInt(document.getElementById("ltPosY").value, 10) || 64,
+                scale: parseInt(document.getElementById("ltScale").value, 10) || 100,
+                bgAlpha: parseInt(document.getElementById("ltAlpha").value, 10) || 94
+            });
+        };
+
+        window.toggleLowerThird = () => {
+            const current = !!liveState.lowerThird?.visible;
+            window.pushLowerThird(!current);
+        };
+
+        window.updateLtGeometry = async () => {
+            await update(ref(db, `tf_studio/live/${window.compId}/lowerThird`), {
+                posX: parseInt(document.getElementById("ltPosX").value, 10) || 64,
+                posY: parseInt(document.getElementById("ltPosY").value, 10) || 64,
+                scale: parseInt(document.getElementById("ltScale").value, 10) || 100,
+                bgAlpha: parseInt(document.getElementById("ltAlpha").value, 10) || 94
+            });
+        };
+
+        window.saveLtPreset = async () => {
+            const title = document.getElementById("ltTitle").value.trim();
+            if (!title) return alert("Ingresa el nombre principal del zócalo.");
+            const newRef = push(ref(db, `tf_studio/competitions/${window.compId}/ltPresets`));
+            await set(newRef, {
+                kicker: document.getElementById("ltKicker").value,
+                title,
+                subtitle: document.getElementById("ltSubtitle").value,
+                showCompLogo: document.getElementById("ltShowLogo").checked
+            });
+        };
+
+        window.pushSponsor = async (visible) => {
+            await set(ref(db, `tf_studio/live/${window.compId}/sponsor`), {
+                visible,
+                tag: document.getElementById("spTag").value,
+                name: document.getElementById("spName").value,
+                slogan: document.getElementById("spSlogan").value,
+                logo: currentSpLogo,
+                watermarkMode: document.getElementById("spWatermark").checked,
+                posX: parseInt(document.getElementById("spPosX").value, 10) || 64,
+                posY: parseInt(document.getElementById("spPosY").value, 10) || 64,
+                scale: parseInt(document.getElementById("spScale").value, 10) || 100,
+                bgAlpha: parseInt(document.getElementById("spAlpha").value, 10) || 92
+            });
+        };
+
+        window.toggleSponsor = () => {
+            const current = !!liveState.sponsor?.visible;
+            window.pushSponsor(!current);
+        };
+
+        window.updateSpGeometry = async () => {
+            await update(ref(db, `tf_studio/live/${window.compId}/sponsor`), {
+                posX: parseInt(document.getElementById("spPosX").value, 10) || 64,
+                posY: parseInt(document.getElementById("spPosY").value, 10) || 64,
+                scale: parseInt(document.getElementById("spScale").value, 10) || 100,
+                bgAlpha: parseInt(document.getElementById("spAlpha").value, 10) || 92
+            });
+        };
+
+        window.saveSponsorPreset = async () => {
+            const name = document.getElementById("spName").value.trim();
+            if (!name) return alert("Ingresa el nombre de la marca auspiciadora.");
+            const newRef = push(ref(db, `tf_studio/competitions/${window.compId}/spPresets`));
+            await set(newRef, {
+                tag: document.getElementById("spTag").value,
+                name,
+                slogan: document.getElementById("spSlogan").value,
+                logo: currentSpLogo,
+                watermarkMode: document.getElementById("spWatermark").checked
+            });
+        };
+
+        function renderPresets(ltPresets, spPresets) {
+            const ltContainer = document.getElementById("ltPresetsList");
+            const ltKeys = Object.keys(ltPresets);
+            ltContainer.innerHTML = ltKeys.length ? ltKeys.map((id) => {
+                const p = ltPresets[id];
+                return `
+                    <div class="preset-row">
+                        <div>
+                            <div style="font-weight:800; font-size:13px;">${p.title}</div>
+                            <div style="font-size:11px; color:var(--text-muted);">${p.subtitle || ""}</div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-green" style="padding:5px 10px; font-size:11px;" onclick="window.launchLtPreset('${id}')">▶ Al Aire</button>
+                            <button class="btn-dark" style="padding:5px 8px; font-size:11px; color:#fca5a5;" onclick="window.delLtPreset('${id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join("") : `<p style="font-size:12px; color:var(--text-muted);">Sin zócalos guardados aún.</p>`;
+
+            const spContainer = document.getElementById("spPresetsList");
+            const spKeys = Object.keys(spPresets);
+            spContainer.innerHTML = spKeys.length ? spKeys.map((id) => {
+                const s = spPresets[id];
+                return `
+                    <div class="preset-row">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${s.logo ? `<img src="${s.logo}" style="width:30px; height:30px; object-fit:contain;">` : ""}
+                            <div>
+                                <div style="font-weight:800; font-size:13px;">${s.name}</div>
+                                <div style="font-size:11px; color:var(--text-muted);">${s.slogan || ""}</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-green" style="padding:5px 10px; font-size:11px;" onclick="window.launchSpPreset('${id}')">▶ Al Aire</button>
+                            <button class="btn-dark" style="padding:5px 8px; font-size:11px; color:#fca5a5;" onclick="window.delSpPreset('${id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join("") : `<p style="font-size:12px; color:var(--text-muted);">Sin auspiciadores guardados aún.</p>`;
+
+            window._ltPresets = ltPresets;
+            window._spPresets = spPresets;
+        }
+
+        window.launchLtPreset = (id) => {
+            const p = window._ltPresets?.[id];
+            if (!p) return;
+            document.getElementById("ltKicker").value = p.kicker || "";
+            document.getElementById("ltTitle").value = p.title || "";
+            document.getElementById("ltSubtitle").value = p.subtitle || "";
+            document.getElementById("ltShowLogo").checked = p.showCompLogo !== false;
+            window.pushLowerThird(true);
+        };
+
+        window.delLtPreset = (id) => remove(ref(db, `tf_studio/competitions/${window.compId}/ltPresets/${id}`));
+
+        window.launchSpPreset = (id) => {
+            const s = window._spPresets?.[id];
+            if (!s) return;
+            document.getElementById("spTag").value = s.tag || "";
+            document.getElementById("spName").value = s.name || "";
+            document.getElementById("spSlogan").value = s.slogan || "";
+            document.getElementById("spWatermark").checked = !!s.watermarkMode;
+            currentSpLogo = s.logo || "";
+            window.pushSponsor(true);
+        };
+
+        window.delSpPreset = (id) => remove(ref(db, `tf_studio/competitions/${window.compId}/spPresets/${id}`));
+    </script>
+</body>
+</html>
