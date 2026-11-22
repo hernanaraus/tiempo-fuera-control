@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiempo Fuera Studio — Control Broadcast</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,700;0,800;1,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+    <!-- PANTALLA DE ACCESO CONTROLADO -->
+    <section id="loginView" class="login-screen">
+        <div class="login-card">
+            <span class="brand-badge">TIEMPO FUERA • BROADCAST SUITE</span>
+            <h1>CONTROL.TIEMPOFUERA.CL</h1>
+            <p>Plataforma centralizada de gráficas en vivo, marcadores y overlays para transmisiones de básquetbol.</p>
+            <button id="btnGoogleLogin" class="btn-google">
+                <svg width="18" height="18" viewBox="0 0 48 48">
+                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                </svg>
+                Ingresar con Cuenta Google Autorizada
+            </button>
+            <div id="loginErrorBox" class="login-error"></div>
+        </div>
+    </section>
+
+    <!-- PANEL PRINCIPAL LANZADOR -->
+    <div id="appView" class="hidden">
+        <header class="topbar">
+            <div class="topbar-brand">
+                <div class="topbar-title">TIEMPO <span>FUERA</span> // STUDIO</div>
+                <span style="font-size: 11px; color: #9ca3af; background:#1f2430; padding:3px 9px; border-radius:4px;">BÁSQUETBOL LIVE</span>
+            </div>
+            <div class="user-chip">
+                <img id="userAvatar" src="" alt="">
+                <span id="userEmailLabel">admin@tiempofuera.cl</span>
+                <button id="btnLogout" class="btn-dark" style="padding: 4px 10px; font-size: 11px;">Salir</button>
+            </div>
+        </header>
+
+        <main class="container">
+            <div class="grid-launcher">
+
+                <!-- COLUMNA IZQUIERDA: COMPETENCIAS GUARDADAS + CREADOR -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Mis Competencias</h2>
+                            <button id="btnNewCompMode" class="btn-red" style="padding:5px 10px; font-size:11px;">+ Nueva</button>
+                        </div>
+                        <div id="competitionsList">
+                            <p style="font-size:12px; color:var(--text-muted);">Cargando competencias desde Firebase...</p>
+                        </div>
+                    </div>
+
+                    <!-- FORMULARIO DE COMPETENCIA (CREAR / EDITAR) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 id="formCompTitle">Nueva Competencia</h2>
+                        </div>
+
+                        <input type="hidden" id="editCompId" value="">
+
+                        <div class="form-group">
+                            <label>Nombre de la Competencia / Liga</label>
+                            <input type="text" id="compName" placeholder="Ej: Liga Máster Apertura 2026">
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:8px;">
+                            <div class="form-group">
+                                <label>Lienzo de Salida (OBS/vMix)</label>
+                                <select id="compResolution">
+                                    <option value="1920x1080">1920 x 1080 (Full HD)</option>
+                                    <option value="2560x1440">2560 x 1440 (2K QHD)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Fluidez (FPS)</label>
+                                <select id="compFps">
+                                    <option value="60">60 FPS</option>
+                                    <option value="30">30 FPS</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Logo Oficial (Recomendado 1000x1000 PNG)</label>
+                            <input type="file" id="compLogoInput" accept="image/png,image/webp,image/jpeg">
+                            <div id="compLogoPreviewWrap" class="hidden" style="margin-top:8px; display:flex; align-items:center; gap:10px; background:#0e1015; padding:8px; border-radius:8px; border:1px solid var(--border);">
+                                <img id="compLogoPreview" src="" style="width:52px; height:52px; object-fit:contain;">
+                                <div style="font-size:11px; color:var(--text-muted);">
+                                    <div id="compLogoStatus" style="color:#86efac; font-weight:700;">Logo optimizado</div>
+                                    <label style="display:flex; align-items:center; gap:5px; margin-top:4px; cursor:pointer; color:#fff;">
+                                        <input type="checkbox" id="compLogoWatermark"> Modo Marca de Agua (Logos blancos)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Paleta de Colores (Auto-detectada del logo o manual)</label>
+                            <div class="color-grid">
+                                <div class="color-item">
+                                    <span>Fondo / Base</span>
+                                    <input type="color" id="colorPrimary" value="#12151c">
+                                </div>
+                                <div class="color-item">
+                                    <span>Secundario</span>
+                                    <input type="color" id="colorSecondary" value="#e11d2a">
+                                </div>
+                                <div class="color-item">
+                                    <span>Acento</span>
+                                    <input type="color" id="colorAccent" value="#e5b84b">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btnSaveComp" class="btn-red" style="width:100%; padding:11px;">💾 Guardar Competencia</button>
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: LANZADOR DE GRÁFICAS Y REPOSITORIO DE EQUIPOS -->
+                <div>
+                    <!-- SALIDA ÚNICA MAESTRA -->
+                    <div class="output-banner">
+                        <div style="flex:1; min-width:260px;">
+                            <div style="font-size:11px; font-weight:800; color:var(--tf-red); letter-spacing:1px; text-transform:uppercase;">
+                                ● Salida Única Maestra (Sin clave para OBS / vMix)
+                            </div>
+                            <div style="font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:800;" id="activeCompBannerName">
+                                Selecciona o crea una competencia
+                            </div>
+                            <div class="output-url-box" id="outputUrlDisplay">https://control.tiempofuera.cl/output.html</div>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button id="btnCopyOutputUrl" class="btn-gold">📋 Copiar Link OBS</button>
+                            <button id="btnPreviewOutput" class="btn-dark">👁 Vista Previa</button>
+                        </div>
+                    </div>
+
+                    <!-- MÓDULOS DE BÁSQUETBOL -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Lanzador de Aplicaciones Gráficas (Básquetbol)</h2>
+                            <span style="font-size:11px; color:var(--text-muted);" id="activeCanvasSpec">Lienzo: 1920x1080 • 60 FPS</span>
+                        </div>
+
+                        <div class="modules-grid">
+                            <div class="module-card">
+                                <div>
+                                    <div class="module-top">
+                                        <div class="module-title">1. Competencia de Triples</div>
+                                        <span class="module-tag tag-next">Etapa 2</span>
+                                    </div>
+                                    <p class="module-desc">Barra inferior estilo NBA con cronómetro en vivo, puntaje a superar, balón especial, media cancha y escudos sin borde.</p>
+                                </div>
+                                <button class="btn-dark" onclick="openModule('triples.html')">Abrir Controlador Triples →</button>
+                            </div>
+
+                            <div class="module-card">
+                                <div>
+                                    <div class="module-top">
+                                        <div class="module-title">2. Zócalos, Relatores y Auspiciadores</div>
+                                        <span class="module-tag tag-next">Etapa 2</span>
+                                    </div>
+                                    <p class="module-desc">Tercios inferiores para presentadores/comentaristas, carrusel de sponsors y bug automático @tiempofuera_cl cada 5 min.</p>
+                                </div>
+                                <button class="btn-dark" onclick="openModule('zocalos.html')">Abrir Controlador Zócalos →</button>
+                            </div>
+
+                            <div class="module-card">
+                                <div>
+                                    <div class="module-top">
+                                        <div class="module-title">3. Marcador Partido + ScoreSight</div>
+                                        <span class="module-tag tag-next">Etapa 3</span>
+                                    </div>
+                                    <p class="module-desc">Scorebug oficial de básquetbol (cuartos, reloj de posesión, faltas, tiempos muertos) sincronizado con ScoreSight.</p>
+                                </div>
+                                <button class="btn-dark" onclick="openModule('marcador.html')">Abrir Controlador Marcador →</button>
+                            </div>
+
+                            <div class="module-card">
+                                <div>
+                                    <div class="module-top">
+                                        <div class="module-title">4. Estadísticas, MVP y Nóminas (+IA)</div>
+                                        <span class="module-tag tag-next">Etapa 4</span>
+                                    </div>
+                                    <p class="module-desc">Tarjetas de jugador destacado, comparativa de equipos, planteles y lectura automática de planillas con Gemini.</p>
+                                </div>
+                                <button class="btn-dark" onclick="openModule('estadisticas.html')">Abrir Controlador Estadísticas →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REPOSITORIO DE EQUIPOS Y LOGOS DE LA COMPETENCIA ACTIVA -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Repositorio de Equipos de esta Competencia</h2>
+                            <span style="font-size:11px; color:var(--text-muted);" id="teamsCountBadge">0 equipos guardados</span>
+                        </div>
+
+                        <div id="noCompTeamsNotice" style="font-size:13px; color:var(--text-muted);">
+                            Guarda o selecciona una competencia a la izquierda para cargar los escudos PNG de los equipos participantes.
+                        </div>
+
+                        <div id="teamsManagerWrap" class="hidden">
+                            <div style="display:grid; grid-template-columns: 1.2fr 1.2fr auto; gap:8px; align-items:end;">
+                                <div>
+                                    <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">NOMBRE DEL CLUB / EQUIPO</label>
+                                    <input type="text" id="newTeamName" placeholder="Ej: Árabe Unido">
+                                </div>
+                                <div>
+                                    <label style="display:block; font-size:11px; color:var(--text-muted); margin-bottom:4px;">ESCUDO PNG (1000x1000)</label>
+                                    <input type="file" id="newTeamLogo" accept="image/png,image/webp,image/jpeg">
+                                </div>
+                                <button id="btnAddTeam" class="btn-green" style="height:37px;">+ Agregar Equipo</button>
+                            </div>
+
+                            <div id="teamsGrid" class="teams-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import {
+            db,
+            loginAdminWithGoogle,
+            logoutAdmin,
+            watchAdminAuth,
+            ref,
+            set,
+            push,
+            update,
+            remove,
+            onValue
+        } from "./js/firebase-config.js";
+        import { processLogoImage } from "./js/palette-extractor.js";
+
+        const loginView = document.getElementById("loginView");
+        const appView = document.getElementById("appView");
+        const loginErrorBox = document.getElementById("loginErrorBox");
+
+        let competitions = {};
+        let selectedCompId = localStorage.getItem("tf_selected_comp_id") || "";
+        let currentLogoDataUrl = "";
+
+        // 1. AUTENTICACIÓN CONTROLADA
+        document.getElementById("btnGoogleLogin").addEventListener("click", async () => {
+            loginErrorBox.style.display = "none";
+            try {
+                await loginAdminWithGoogle();
+            } catch (err) {
+                loginErrorBox.textContent = err.message;
+                loginErrorBox.style.display = "block";
+            }
+        });
+
+        document.getElementById("btnLogout").addEventListener("click", () => logoutAdmin());
+
+        watchAdminAuth(
+            (user) => {
+                loginView.classList.add("hidden");
+                appView.classList.remove("hidden");
+                document.getElementById("userEmailLabel").textContent = user.email;
+                document.getElementById("userAvatar").src = user.photoURL || "";
+                subscribeCompetitions();
+            },
+            (deniedMessage) => {
+                appView.classList.add("hidden");
+                loginView.classList.remove("hidden");
+                if (deniedMessage) {
+                    loginErrorBox.textContent = deniedMessage;
+                    loginErrorBox.style.display = "block";
+                }
+            }
+        );
+
+        // 2. ESCUCHA EN TIEMPO REAL DE COMPETENCIAS EN FIREBASE
+        function subscribeCompetitions() {
+            const compsRef = ref(db, "tf_studio/competitions");
+            onValue(compsRef, (snapshot) => {
+                competitions = snapshot.val() || {};
+                const keys = Object.keys(competitions);
+                if (!selectedCompId || !competitions[selectedCompId]) {
+                    selectedCompId = keys[0] || "";
+                    if (selectedCompId) localStorage.setItem("tf_selected_comp_id", selectedCompId);
+                }
+                renderCompetitionsList();
+                updateActiveCompetitionUI();
+            });
+        }
+
+        function renderCompetitionsList() {
+            const container = document.getElementById("competitionsList");
+            const keys = Object.keys(competitions);
+            if (!keys.length) {
+                container.innerHTML = `<p style="font-size:12px; color:var(--text-muted);">Aún no tienes competencias guardadas. Crea la primera abajo.</p>`;
+                return;
+            }
+
+            container.innerHTML = keys.map((id) => {
+                const c = competitions[id];
+                const isAct = id === selectedCompId;
+                const logoHtml = c.logo
+                    ? `<img src="${c.logo}" class="comp-thumb" alt="">`
+                    : `<div class="comp-thumb" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:#666;">SIN<br>LOGO</div>`;
+
+                return `
+                    <div class="comp-item ${isAct ? "active" : ""}" onclick="window.selectCompetition('${id}')">
+                        <div class="comp-item-left">
+                            ${logoHtml}
+                            <div style="min-width:0;">
+                                <div class="comp-name">${c.name}</div>
+                                <div class="comp-sub">${c.resolution || "1920x1080"} • ${c.fps || "60"} FPS</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <button class="btn-dark" style="padding:4px 8px; font-size:10px;" onclick="event.stopPropagation(); window.loadCompIntoForm('${id}')">Editar</button>
+                            <button class="btn-dark" style="padding:4px 8px; font-size:10px; color:#fca5a5;" onclick="event.stopPropagation(); window.deleteCompetition('${id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        window.selectCompetition = (id) => {
+            selectedCompId = id;
+            localStorage.setItem("tf_selected_comp_id", id);
+            renderCompetitionsList();
+            updateActiveCompetitionUI();
+        };
+
+        window.loadCompIntoForm = (id) => {
+            const c = competitions[id];
+            if (!c) return;
+            document.getElementById("formCompTitle").textContent = "Editando Competencia";
+            document.getElementById("editCompId").value = id;
+            document.getElementById("compName").value = c.name || "";
+            document.getElementById("compResolution").value = c.resolution || "1920x1080";
+            document.getElementById("compFps").value = c.fps || "60";
+            document.getElementById("colorPrimary").value = c.palette?.primary || "#12151c";
+            document.getElementById("colorSecondary").value = c.palette?.secondary || "#e11d2a";
+            document.getElementById("colorAccent").value = c.palette?.accent || "#e5b84b";
+            document.getElementById("compLogoWatermark").checked = !!c.watermarkMode;
+            currentLogoDataUrl = c.logo || "";
+
+            const wrap = document.getElementById("compLogoPreviewWrap");
+            if (currentLogoDataUrl) {
+                wrap.classList.remove("hidden");
+                document.getElementById("compLogoPreview").src = currentLogoDataUrl;
+                document.getElementById("compLogoStatus").textContent = "Logo guardado cargado";
+            } else {
+                wrap.classList.add("hidden");
+            }
+        };
+
+        document.getElementById("btnNewCompMode").addEventListener("click", () => {
+            document.getElementById("formCompTitle").textContent = "Nueva Competencia";
+            document.getElementById("editCompId").value = "";
+            document.getElementById("compName").value = "";
+            document.getElementById("compResolution").value = "1920x1080";
+            document.getElementById("compFps").value = "60";
+            document.getElementById("colorPrimary").value = "#12151c";
+            document.getElementById("colorSecondary").value = "#e11d2a";
+            document.getElementById("colorAccent").value = "#e5b84b";
+            document.getElementById("compLogoWatermark").checked = false;
+            document.getElementById("compLogoInput").value = "";
+            document.getElementById("compLogoPreviewWrap").classList.add("hidden");
+            currentLogoDataUrl = "";
+        });
+
+        // 3. PROCESAMIENTO DE LOGO 1000x1000 Y EXTRACCIÓN DE PALETA
+        document.getElementById("compLogoInput").addEventListener("change", async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                const res = await processLogoImage(file, 320);
+                currentLogoDataUrl = res.dataUrl;
+                document.getElementById("compLogoPreviewWrap").classList.remove("hidden");
+                document.getElementById("compLogoPreview").src = res.dataUrl;
+                document.getElementById("compLogoStatus").textContent = `Optimizado (${res.width}x${res.height}px) • Paleta aplicada`;
+                document.getElementById("colorPrimary").value = res.palette.primary;
+                document.getElementById("colorSecondary").value = res.palette.secondary;
+                document.getElementById("colorAccent").value = res.palette.accent;
+                document.getElementById("compLogoWatermark").checked = res.isMostlyWhite;
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+
+        // 4. GUARDAR / ELIMINAR COMPETENCIA
+        document.getElementById("btnSaveComp").addEventListener("click", async () => {
+            const name = document.getElementById("compName").value.trim();
+            if (!name) return alert("Ingresa un nombre para la competencia.");
+
+            const editId = document.getElementById("editCompId").value;
+            const compData = {
+                name,
+                resolution: document.getElementById("compResolution").value,
+                fps: document.getElementById("compFps").value,
+                logo: currentLogoDataUrl,
+                watermarkMode: document.getElementById("compLogoWatermark").checked,
+                palette: {
+                    primary: document.getElementById("colorPrimary").value,
+                    secondary: document.getElementById("colorSecondary").value,
+                    accent: document.getElementById("colorAccent").value
+                },
+                updatedAt: Date.now()
+            };
+
+            if (editId) {
+                await update(ref(db, `tf_studio/competitions/${editId}`), compData);
+                selectedCompId = editId;
+            } else {
+                const newRef = push(ref(db, "tf_studio/competitions"));
+                await set(newRef, { ...compData, createdAt: Date.now() });
+                selectedCompId = newRef.key;
+            }
+            localStorage.setItem("tf_selected_comp_id", selectedCompId);
+            document.getElementById("btnNewCompMode").click();
+        });
+
+        window.deleteCompetition = async (id) => {
+            const c = competitions[id];
+            if (!c) return;
+            if (!confirm(`¿Eliminar la competencia "${c.name}" y todos sus equipos guardados?`)) return;
+            await remove(ref(db, `tf_studio/competitions/${id}`));
+        };
+
+        // 5. UI COMPETENCIA ACTIVA + REPOSITORIO DE EQUIPOS
+        function updateActiveCompetitionUI() {
+            const c = competitions[selectedCompId];
+            const baseUrl = window.location.origin + window.location.pathname.replace(/index\.html$/, "") + "output.html";
+
+            if (!c) {
+                document.getElementById("activeCompBannerName").textContent = "Selecciona o crea una competencia";
+                document.getElementById("outputUrlDisplay").textContent = baseUrl;
+                document.getElementById("noCompTeamsNotice").classList.remove("hidden");
+                document.getElementById("teamsManagerWrap").classList.add("hidden");
+                return;
+            }
+
+            document.getElementById("activeCompBannerName").textContent = c.name;
+            document.getElementById("activeCanvasSpec").textContent = `Lienzo: ${c.resolution || "1920x1080"} • ${c.fps || "60"} FPS`;
+            document.getElementById("outputUrlDisplay").textContent = `${baseUrl}?comp=${selectedCompId}`;
+
+            document.getElementById("noCompTeamsNotice").classList.add("hidden");
+            document.getElementById("teamsManagerWrap").classList.remove("hidden");
+
+            const teams = c.teams || {};
+            const teamKeys = Object.keys(teams);
+            document.getElementById("teamsCountBadge").textContent = `${teamKeys.length} equipos guardados`;
+
+            const grid = document.getElementById("teamsGrid");
+            if (!teamKeys.length) {
+                grid.innerHTML = `<p style="font-size:12px; color:var(--text-muted); grid-column:1/-1;">Aún no hay equipos cargados en esta competencia.</p>`;
+            } else {
+                grid.innerHTML = teamKeys.map((tid) => {
+                    const t = teams[tid];
+                    return `
+                        <div class="team-chip-card">
+                            <div class="team-chip-info">
+                                ${t.logo ? `<img src="${t.logo}" alt="">` : ""}
+                                <div class="team-chip-name">${t.name}</div>
+                            </div>
+                            <button class="btn-dark" style="padding:3px 7px; font-size:10px; color:#fca5a5;" onclick="window.deleteTeam('${tid}')">✕</button>
+                        </div>
+                    `;
+                }).join("");
+            }
+        }
+
+        document.getElementById("btnAddTeam").addEventListener("click", async () => {
+            if (!selectedCompId) return;
+            const name = document.getElementById("newTeamName").value.trim().toUpperCase();
+            const file = document.getElementById("newTeamLogo").files?.[0];
+            if (!name) return alert("Escribe el nombre del equipo.");
+
+            let logoData = "";
+            if (file) {
+                const processed = await processLogoImage(file, 300);
+                logoData = processed.dataUrl;
+            }
+
+            const newTeamRef = push(ref(db, `tf_studio/competitions/${selectedCompId}/teams`));
+            await set(newTeamRef, { name, logo: logoData });
+
+            document.getElementById("newTeamName").value = "";
+            document.getElementById("newTeamLogo").value = "";
+        });
+
+        window.deleteTeam = async (tid) => {
+            if (!selectedCompId) return;
+            await remove(ref(db, `tf_studio/competitions/${selectedCompId}/teams/${tid}`));
+        };
+
+        document.getElementById("btnCopyOutputUrl").addEventListener("click", () => {
+            const url = document.getElementById("outputUrlDisplay").textContent;
+            navigator.clipboard.writeText(url);
+            alert("Enlace de salida OBS copiado al portapapeles:\n" + url);
+        });
+
+        document.getElementById("btnPreviewOutput").addEventListener("click", () => {
+            const url = document.getElementById("outputUrlDisplay").textContent;
+            window.open(url, "_blank");
+        });
+
+        window.openModule = (page) => {
+            if (!selectedCompId) {
+                return alert("Primero selecciona o guarda una competencia a la izquierda.");
+            }
+            window.location.href = `${page}?comp=${selectedCompId}`;
+        };
+    </script>
+</body>
+</html>
